@@ -6,10 +6,10 @@ namespace EduQueue.Application.Interfaces
     public interface ITicketService
     {
         Task<Ticket> CreateTicketAsync(CreateTicketDto dto);
-        Task<Ticket?> GetTicketByIdAsync(Guid id);
-        Task<IEnumerable<Ticket>> GetAllTicketsAsync();
-        Task<IEnumerable<Ticket>> GetTicketsbyWindowAsync(Guid windowId);
-        Task<Ticket> CallNextTicketAsync(Guid windowId, Guid officerId);
+        Task<TicketDto?> GetTicketByIdAsync(Guid id);
+        Task<IEnumerable<TicketDto>> GetAllTicketsAsync();
+        Task<IEnumerable<TicketDto>> GetTicketsbyWindowAsync(Guid windowId);
+        Task<TicketDto> CallNextTicketAsync(Guid windowId, Guid officerId);
         Task CompleteTicketAsync(Guid ticketId);
         Task MarkNoShowAsync(Guid ticketId);
         Task TransferTicketAsync(Guid ticketId, Guid targetWindowId);

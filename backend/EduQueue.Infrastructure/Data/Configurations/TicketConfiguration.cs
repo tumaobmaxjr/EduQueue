@@ -20,6 +20,12 @@ namespace EduQueue.Infrastructure.Data.Configurations
 
             builder.HasIndex(t => t.TicketNumber);
             builder.HasIndex(t => new { t.WindowId, t.Status });
+
+            // Ticket belongs to one Window
+            builder.HasOne(t => t.Window)
+                .WithMany(w => w.Tickets)
+                .HasForeignKey(t => t.WindowId)
+                .OnDelete(DeleteBehavior.Restrict);  // Prevent deleting window if tickets exist
         }
     }
 }

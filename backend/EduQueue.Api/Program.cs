@@ -21,6 +21,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 
+builder.Services.AddScoped<IWindowRepository, WindowRepository>();
+builder.Services.AddScoped<IWindowService, WindowService>();
+
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

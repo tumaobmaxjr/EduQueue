@@ -88,6 +88,58 @@ namespace EduQueue.Infrastructure.Migrations
 
                     b.ToTable("Tickets");
                 });
+
+            modelBuilder.Entity("EduQueue.Domain.Entities.Window", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.ToTable("Windows");
+                });
+
+            modelBuilder.Entity("EduQueue.Domain.Entities.Ticket", b =>
+                {
+                    b.HasOne("EduQueue.Domain.Entities.Window", "Window")
+                        .WithMany("Tickets")
+                        .HasForeignKey("WindowId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Window");
+                });
+
+            modelBuilder.Entity("EduQueue.Domain.Entities.Window", b =>
+                {
+                    b.Navigation("Tickets");
+                });
 #pragma warning restore 612, 618
         }
     }

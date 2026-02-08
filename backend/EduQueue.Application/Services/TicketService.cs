@@ -42,22 +42,25 @@ namespace EduQueue.Application.Services
             return await _ticketRepository.CreateAsync(ticket);
         }
 
-        public async Task<Ticket?> GetTicketByIdAsync(Guid id)
+        public async Task<TicketDto?> GetTicketByIdAsync(Guid id)
         {
-            return await _ticketRepository.GetByIdAsync(id);
+            var ticket = await _ticketRepository.GetByIdAsync(id);
+            return ticket == null ? null : MapToDto(ticket);
         }
 
-        public async Task<IEnumerable<Ticket>> GetAllTicketsAsync()
+        public async Task<IEnumerable<TicketDto>> GetAllTicketsAsync()
         {
-            return await _ticketRepository.GetAllAsync();
+            var tickets = await _ticketRepository.GetAllAsync();
+            return tickets.Select(MapToDto);
         }
 
-        public async Task<IEnumerable<Ticket>> GetTicketsbyWindowAsync(Guid windowId)
+        public async Task<IEnumerable<TicketDto>> GetTicketsbyWindowAsync(Guid windowId)
         {
-            return await _ticketRepository.GetByWindowIdAsync(windowId);
+            var tickets = await _ticketRepository.GetByWindowIdAsync(windowId);
+            return tickets.Select(MapToDto);
         }
 
-        public async Task<Ticket> CallNextTicketAsync(Guid windowId, Guid officerId)
+        public async Task<TicketDto> CallNextTicketAsync(Guid windowId, Guid officerId)
         {
             var tickets = await _ticketRepository.GetByWindowIdAsync(windowId);
 
@@ -77,7 +80,7 @@ namespace EduQueue.Application.Services
             nextTicket.ServedByOfficerId = officerId;
 
             await _ticketRepository.UpdateAsync(nextTicket);
-            return nextTicket;
+            return MapToDto(nextTicket);
         }
 
         public async Task CompleteTicketAsync(Guid ticketId)
@@ -127,6 +130,29 @@ namespace EduQueue.Application.Services
             ticket.WindowId = targetWindowId;
 
             await _ticketRepository.UpdateAsync(ticket);
+        }
+
+        private TicketDto MapToDto(Ticket ticket)
+        {
+            return new TicketDto
+            {
+                Id = ticket.Id,
+                TicketNumber = ticket.TicketNumber,
+                WindowId = ticket.WindowId,
+                WindowName = ticket.Window?.Name ?? "Unknown",  // Safe navigation
+                IsPriority = ticket.IsPriority,
+                Status = (int)ticket.Status,
+                ClientName = ticket.ClientName,
+                ClientEmail = ticket.ClientEmail,
+                StudentId = ticket.StudentId,
+                Course = ticket.Course,
+                YearLevel = ticket.YearLevel,
+                Department = ticket.Department,
+                CreatedAt = ticket.CreatedAt,
+                CalledAt = ticket.CalledAt,
+                CompletedAt = ticket.CompletedAt,
+                QueuePosition = ticket.QueuePosition
+            };
         }
     }
 }

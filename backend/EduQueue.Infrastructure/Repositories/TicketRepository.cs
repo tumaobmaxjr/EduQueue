@@ -16,17 +16,22 @@ namespace EduQueue.Infrastructure.Repositories
 
         public async Task<Ticket?> GetByIdAsync(Guid id)
         {
-            return await _context.Tickets.FindAsync(id);
+            return await _context.Tickets
+                .Include(t => t.Window)
+                .FirstOrDefaultAsync(t => t.Id == id);
         }
 
         public async Task<IEnumerable<Ticket>> GetAllAsync()
         {
-            return await _context.Tickets.ToListAsync();
+            return await _context.Tickets
+                .Include(t => t.Window)
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<Ticket>> GetByWindowIdAsync(Guid windowId)
         {
             return await _context.Tickets
+                .Include(t => t.Window)
                 .Where(t => t.WindowId == windowId)
                 .ToListAsync();
         }

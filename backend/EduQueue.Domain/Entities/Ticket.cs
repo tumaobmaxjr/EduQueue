@@ -21,6 +21,9 @@
         public Guid? ServedByOfficerId { get; set; }
         public int SkipCount { get; set; } = 0;                 // For tracking "not present" skips
         public int QueuePosition { get; set; }                  // Position in queue (for display)
+
+        // Navigation Property
+        public Window Window { get; set; } = null!;
     }
 
     public enum TicketStatus

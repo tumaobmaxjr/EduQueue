@@ -7,11 +7,11 @@ namespace EduQueue.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class TicketController : ControllerBase
+    public class TicketsController : ControllerBase
     {
         private readonly ITicketService _ticketService;
 
-        public TicketController(ITicketService ticketService)
+        public TicketsController(ITicketService ticketService)
         {
             _ticketService = ticketService;
         }
@@ -31,7 +31,7 @@ namespace EduQueue.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Ticket>> GetTicket(Guid id)
+        public async Task<ActionResult<TicketDto>> GetTicket(Guid id)
         {
             var ticket = await _ticketService.GetTicketByIdAsync(id);
             if (ticket == null) return NotFound();
@@ -40,21 +40,21 @@ namespace EduQueue.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Ticket>>> GetAllTickets()
+        public async Task<ActionResult<IEnumerable<TicketDto>>> GetAllTickets()
         {
             var tickets = await _ticketService.GetAllTicketsAsync();
             return Ok(tickets);
         }
 
         [HttpGet("window/{windowId}")]
-        public async Task<ActionResult<Ticket>> GetTicketsByWindow(Guid windowId)
+        public async Task<ActionResult<TicketDto>> GetTicketsByWindow(Guid windowId)
         {
             var tickets = await _ticketService.GetTicketsbyWindowAsync(windowId);
             return Ok(tickets);
         }
 
         [HttpPost("window/{windowId}/call")]
-        public async Task<ActionResult<Ticket>> CallNextTicket(Guid windowId, [FromQuery] Guid officerId)
+        public async Task<ActionResult<TicketDto>> CallNextTicket(Guid windowId, [FromQuery] Guid officerId)
         {
             try
             {

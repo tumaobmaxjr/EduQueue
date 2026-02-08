@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+  <Project Path="EduQueue.Api/EduQueue.Api.csproj" />
+  <Project Path="EduQueue.Application/EduQueue.Application.csproj" Id="ff90d27a-2953-4bc3-a9e5-2a0316284468" />
+  <Project Path="EduQueue.Domain/EduQueue.Domain.csproj" Id="99102368-1356-4a1a-a57b-ce5edbfe6305" />
+  <Project Path="EduQueue.Infrastructure/EduQueue.Infrastructure.csproj" Id="b4f350bb-029f-4293-b63d-c8c508b3750b" />
+</Solution>

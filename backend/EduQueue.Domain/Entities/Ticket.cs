@@ -5,6 +5,9 @@
         public Guid Id { get; set; }
         public string TicketNumber { get; set; } = string.Empty;
         public Guid WindowId { get; set; }
+        public Window Window { get; set; } = null!;
+        public Guid PurposeId { get; set; }
+        public Purpose Purpose { get; set; } = null!;
         public bool IsPriority { get; set; }
         public TicketStatus Status { get; set; } = TicketStatus.Queued;
 
@@ -21,9 +24,6 @@
         public Guid? ServedByOfficerId { get; set; }
         public int SkipCount { get; set; } = 0;                 // For tracking "not present" skips
         public int QueuePosition { get; set; }                  // Position in queue (for display)
-
-        // Navigation Property
-        public Window Window { get; set; } = null!;
     }
 
     public enum TicketStatus

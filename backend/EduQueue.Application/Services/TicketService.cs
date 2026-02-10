@@ -8,14 +8,25 @@ namespace EduQueue.Application.Services
     public class TicketService : ITicketService
     {
         private readonly ITicketRepository _ticketRepository;
+        private readonly IPurposeRepository _purposeRepository;
 
-        public TicketService(ITicketRepository ticketRepository)
+        public TicketService(ITicketRepository ticketRepository, IPurposeRepository purposeRepository)
         {
             _ticketRepository = ticketRepository;
+            _purposeRepository = purposeRepository;
         }
 
-        public async Task<Ticket> CreateTicketAsync(CreateTicketDto dto)
+        public async Task<TicketDto> CreateTicketAsync(CreateTicketDto dto)
         {
+            // Validate that purpose exists and belongs to the window
+            var purpose = await _purposeRepository.GetByIdAsync(dto.PurposeId);
+
+            if (purpose == null) throw new InvalidOperationException("Invalid purpose for this window");
+
+            if (purpose.WindowId != dto.WindowId) throw new InvalidOperationException("Purpose does not belong to this window");
+
+            if (!purpose.IsActive) throw new InvalidOperationException("This purpose is currently not available");
+
             var ticketCount = await _ticketRepository.GetCountByWindowAndDateAsync(dto.WindowId, DateTime.UtcNow);
 
             var prefix = dto.IsPriority ? "P" : "R";
@@ -27,6 +38,7 @@ namespace EduQueue.Application.Services
                 Id = Guid.NewGuid(),
                 TicketNumber = ticketNumber,
                 WindowId = dto.WindowId,
+                PurposeId = dto.PurposeId,
                 IsPriority = dto.IsPriority,
                 Status = TicketStatus.Queued,
                 ClientName = dto.ClientName,
@@ -39,7 +51,8 @@ namespace EduQueue.Application.Services
                 QueuePosition = sequenceNumber
             };
 
-            return await _ticketRepository.CreateAsync(ticket);
+            var createdTicket = await _ticketRepository.CreateAsync(ticket);
+            return MapToDto(createdTicket);
         }
 
         public async Task<TicketDto?> GetTicketByIdAsync(Guid id)
@@ -140,6 +153,8 @@ namespace EduQueue.Application.Services
                 TicketNumber = ticket.TicketNumber,
                 WindowId = ticket.WindowId,
                 WindowName = ticket.Window?.Name ?? "Unknown",  // Safe navigation
+                PurposeId = ticket.PurposeId,
+                PurposeName = ticket.Purpose?.Name ?? "Unknown",
                 IsPriority = ticket.IsPriority,
                 Status = (int)ticket.Status,
                 ClientName = ticket.ClientName,

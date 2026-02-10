@@ -11,6 +11,7 @@ namespace EduQueue.Infrastructure.Data
 
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<Window> Windows { get; set; }
+        public DbSet<Purpose> Purposes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

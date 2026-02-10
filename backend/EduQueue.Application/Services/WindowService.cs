@@ -1,4 +1,5 @@
-﻿using EduQueue.Application.DTOs;
+﻿using System.ComponentModel.DataAnnotations;
+using EduQueue.Application.DTOs;
 using EduQueue.Application.Interfaces;
 using EduQueue.Domain.Entities;
 using EduQueue.Domain.Interfaces;
@@ -16,11 +17,22 @@ namespace EduQueue.Application.Services
 
         public async Task<Window> CreateWindowAsync(CreateWindowDto dto)
         {
+            if (string.IsNullOrWhiteSpace(dto.Code))
+                throw new ValidationException("Window code is required");
+
+            dto.Code = dto.Code.ToUpper();
+
+            // Check uniqueness
+            var existing = await _windowRepository.GetByCodeAsync(dto.Code);
+            if (existing != null)
+                throw new InvalidOperationException($"Window code '{dto.Code}' already exists");
+
             var window = new Window
             {
                 Id = Guid.NewGuid(),
                 Name = dto.Name,
                 Description = dto.Description,
+                Code = dto.Code.ToUpper(),
                 Location = dto.Location,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -72,6 +84,7 @@ namespace EduQueue.Application.Services
                 Id = window.Id,
                 Name = window.Name,
                 Description = window.Description,
+                Code = window.Code,
                 Location = window.Location,
                 IsActive = window.IsActive,
                 CreatedAt = window.CreatedAt,

@@ -18,6 +18,9 @@ namespace EduQueue.Infrastructure.Data.Configurations
                 .IsRequired()
                 .HasMaxLength(500);
 
+            builder.Property(w => w.Code)
+                .HasMaxLength(10);
+
             builder.Property(w => w.Location)
                 .HasMaxLength(200);
 
@@ -25,6 +28,8 @@ namespace EduQueue.Infrastructure.Data.Configurations
                 .IsRequired(false);
 
             builder.HasIndex(w => w.IsActive);
+            builder.HasIndex(w => w.Code)
+                .IsUnique();
 
             // Window has many Tickets
             builder.HasMany(w => w.Tickets)

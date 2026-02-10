@@ -9,29 +9,39 @@ namespace EduQueue.Application.Services
     {
         private readonly ITicketRepository _ticketRepository;
         private readonly IPurposeRepository _purposeRepository;
+        private readonly IWindowRepository _windowRepository;
 
-        public TicketService(ITicketRepository ticketRepository, IPurposeRepository purposeRepository)
+        public TicketService(
+            ITicketRepository ticketRepository,
+            IPurposeRepository purposeRepository,
+            IWindowRepository windowReository)
         {
             _ticketRepository = ticketRepository;
             _purposeRepository = purposeRepository;
+            _windowRepository = windowReository;
         }
 
         public async Task<TicketDto> CreateTicketAsync(CreateTicketDto dto)
         {
-            // Validate that purpose exists and belongs to the window
+            // Get window to access Code
+            var window = await _windowRepository.GetByIdAsync(dto.WindowId);
+            if (window == null)
+                throw new InvalidOperationException("Window not found");
+
+            // Validate purpose belongs to window
             var purpose = await _purposeRepository.GetByIdAsync(dto.PurposeId);
-
-            if (purpose == null) throw new InvalidOperationException("Invalid purpose for this window");
-
-            if (purpose.WindowId != dto.WindowId) throw new InvalidOperationException("Purpose does not belong to this window");
-
-            if (!purpose.IsActive) throw new InvalidOperationException("This purpose is currently not available");
+            if (purpose == null)
+                throw new InvalidOperationException("Purpose not found");
+            if (purpose.WindowId != dto.WindowId)
+                throw new InvalidOperationException("Purpose does not belong to this window");
+            if (!purpose.IsActive)
+                throw new InvalidOperationException("This purpose is currently not available");
 
             var ticketCount = await _ticketRepository.GetCountByWindowAndDateAsync(dto.WindowId, DateTime.UtcNow);
 
             var prefix = dto.IsPriority ? "P" : "R";
             var sequenceNumber = ticketCount + 1;
-            var ticketNumber = $"{prefix}-W{dto.WindowId.ToString()[..8]}-{sequenceNumber:D3}";
+            var ticketNumber = $"{prefix}-{window.Code}-{sequenceNumber:D3}";
 
             var ticket = new Ticket
             {

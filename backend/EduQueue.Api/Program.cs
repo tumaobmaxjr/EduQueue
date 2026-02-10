@@ -18,14 +18,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Register Dependencies
-builder.Services.AddScoped<ITicketRepository, TicketRepository>();
-builder.Services.AddScoped<ITicketService, TicketService>();
-
 builder.Services.AddScoped<IWindowRepository, WindowRepository>();
 builder.Services.AddScoped<IWindowService, WindowService>();
 
 builder.Services.AddScoped<IPurposeRepository, PurposeRepository>();
 builder.Services.AddScoped<IPurposeService, PurposeService>();
+
+builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+builder.Services.AddScoped<ITicketService, TicketService>();
 
 var app = builder.Build();
 

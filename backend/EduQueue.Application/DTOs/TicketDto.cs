@@ -6,6 +6,8 @@
         public string TicketNumber { get; set; } = string.Empty;
         public Guid WindowId { get; set; }
         public string WindowName { get; set; } = string.Empty;
+        public Guid PurposeId { get; set; }
+        public string PurposeName { get; set; } = string.Empty;
         public bool IsPriority { get; set; }
         public int Status { get; set; }
         public string ClientName { get; set; } = string.Empty;

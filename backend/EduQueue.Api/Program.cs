@@ -24,7 +24,8 @@ builder.Services.AddScoped<ITicketService, TicketService>();
 builder.Services.AddScoped<IWindowRepository, WindowRepository>();
 builder.Services.AddScoped<IWindowService, WindowService>();
 
-
+builder.Services.AddScoped<IPurposeRepository, PurposeRepository>();
+builder.Services.AddScoped<IPurposeService, PurposeService>();
 
 var app = builder.Build();
 

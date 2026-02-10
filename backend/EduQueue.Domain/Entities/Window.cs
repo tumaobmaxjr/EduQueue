@@ -10,7 +10,7 @@
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
-        // Navigation Property
         public ICollection<Ticket> Tickets { get; set; } = new List<Ticket>();
+        public ICollection<Purpose> Purposes { get; set; } = new List<Purpose>();
     }
 }

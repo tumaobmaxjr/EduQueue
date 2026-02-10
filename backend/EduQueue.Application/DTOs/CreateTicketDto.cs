@@ -3,6 +3,7 @@
     public class CreateTicketDto
     {
         public Guid WindowId { get; set; }
+        public Guid PurposeId { get; set; }
         public bool IsPriority { get; set; }
         public string ClientName { get; set; } = string.Empty;
         public string? ClientEmail { get; set; }

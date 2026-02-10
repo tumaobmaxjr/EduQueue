@@ -21,6 +21,12 @@ namespace EduQueue.Infrastructure.Repositories
                 .FirstOrDefaultAsync(w => w.Id == id);
         }
 
+        public async Task<Window?> GetByCodeAsync(string code)
+        {
+            return await _context.Windows
+                .FirstOrDefaultAsync(w => w.Code == code);
+        }
+
         public async Task<IEnumerable<Window>> GetAllAsync()
         {
             return await _context.Windows

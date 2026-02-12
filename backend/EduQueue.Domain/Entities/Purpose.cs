@@ -7,7 +7,7 @@
         public string Description { get; set; } = string.Empty;     // e.g., "Official TOR with registrar's seal"
         public Guid WindowId { get; set; }                          // Required: belongs to one window
         public Window Window { get; set; } = null!;
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 

@@ -16,7 +16,7 @@
         public string? Course { get; set; }
         public string? YearLevel { get; set; }
         public string? Department { get; set; }
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? CalledAt { get; set; }
         public DateTime? CompletedAt { get; set; }
         public int QueuePosition { get; set; }

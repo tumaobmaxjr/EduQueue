@@ -77,7 +77,7 @@ namespace EduQueue.Application.Services
             return tickets.Select(MapToDto);
         }
 
-        public async Task<IEnumerable<TicketDto>> GetTicketsbyWindowAsync(Guid windowId)
+        public async Task<IEnumerable<TicketDto>> GetTicketsByWindowAsync(Guid windowId)
         {
             var tickets = await _ticketRepository.GetByWindowIdAsync(windowId);
             return tickets.Select(MapToDto);

@@ -49,7 +49,7 @@ namespace EduQueue.Api.Controllers
         [HttpGet("window/{windowId}")]
         public async Task<ActionResult<TicketDto>> GetTicketsByWindow(Guid windowId)
         {
-            var tickets = await _ticketService.GetTicketsbyWindowAsync(windowId);
+            var tickets = await _ticketService.GetTicketsByWindowAsync(windowId);
             return Ok(tickets);
         }
 

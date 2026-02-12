@@ -14,11 +14,11 @@ namespace EduQueue.Application.Services
         public TicketService(
             ITicketRepository ticketRepository,
             IPurposeRepository purposeRepository,
-            IWindowRepository windowReository)
+            IWindowRepository windowRepository)
         {
             _ticketRepository = ticketRepository;
             _purposeRepository = purposeRepository;
-            _windowRepository = windowReository;
+            _windowRepository = windowRepository;
         }
 
         public async Task<TicketDto> CreateTicketAsync(CreateTicketDto dto)
@@ -87,15 +87,55 @@ namespace EduQueue.Application.Services
         {
             var tickets = await _ticketRepository.GetByWindowIdAsync(windowId);
 
-            // Get next eligible ticket (Queued or NoShow can be recalled)
-            var nextTicket = tickets
+            // Filter to only Queued or NoShow tickets
+            var eligibleTickets = tickets
                 .Where(t => t.Status == TicketStatus.Queued || t.Status == TicketStatus.NoShow)
                 .OrderBy(t => t.CreatedAt)
-                .FirstOrDefault();
+                .ToList();
 
-            if (nextTicket == null)
+            if (!eligibleTickets.Any())
             {
                 throw new InvalidOperationException("No tickets in queue");
+            }
+
+            // Check what was served last
+            bool lastWasPriority = WindowQueueState.WasLastPriority(windowId);
+
+            Ticket? nextTicket = null;
+
+            if (!lastWasPriority)
+            {
+                // Last was Regular (or first call), so serve Priority if available
+                nextTicket = eligibleTickets
+                    .Where(t => t.IsPriority)
+                    .OrderBy(t => t.CreatedAt)
+                    .FirstOrDefault();
+
+                if (nextTicket != null)
+                {
+                    WindowQueueState.SetLastPriority(windowId, true); // Mark as priority served
+                }
+            }
+
+            // If no priority ticket found or last was priority, serve Regular
+            if (nextTicket == null)
+            {
+                nextTicket = eligibleTickets
+                    .Where(t => !t.IsPriority)
+                    .OrderBy(t => t.CreatedAt)
+                    .FirstOrDefault();
+
+                if (nextTicket != null)
+                {
+                    WindowQueueState.SetLastPriority(windowId, false); // Mark as priority served
+                }
+            }
+
+            // If still no ticket (shouldn't happen), take any available
+            if (nextTicket == null)
+            {
+                nextTicket = eligibleTickets.First();
+                WindowQueueState.SetLastPriority(windowId, nextTicket.IsPriority);
             }
 
             nextTicket.Status = TicketStatus.Called;

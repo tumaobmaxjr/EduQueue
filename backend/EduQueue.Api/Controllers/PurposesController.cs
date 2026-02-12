@@ -1,6 +1,5 @@
 ﻿using EduQueue.Application.DTOs;
 using EduQueue.Application.Interfaces;
-using EduQueue.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EduQueue.Api.Controllers
@@ -17,7 +16,7 @@ namespace EduQueue.Api.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Purpose>> CreatePurpose(CreatePurposeDto dto)
+        public async Task<ActionResult<PurposeDto>> CreatePurpose(CreatePurposeDto dto)
         {
             try
             {

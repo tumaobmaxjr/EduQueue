@@ -14,7 +14,7 @@ namespace EduQueue.Application.Services
             _purposeRepository = purposeRepository;
         }
 
-        public async Task<Purpose> CreatePurposeAsync(CreatePurposeDto dto)
+        public async Task<PurposeDto> CreatePurposeAsync(CreatePurposeDto dto)
         {
             var purpose = new Purpose
             {
@@ -26,7 +26,9 @@ namespace EduQueue.Application.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            return await _purposeRepository.CreateAsync(purpose);
+            var createdPurpose = await _purposeRepository.CreateAsync(purpose);
+
+            return MapToDto(createdPurpose);
         }
 
         public async Task<PurposeDto?> GetPurposeByIdAsync(Guid id)

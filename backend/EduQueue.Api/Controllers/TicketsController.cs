@@ -67,6 +67,20 @@ namespace EduQueue.Api.Controllers
             }
         }
 
+        [HttpGet("window/{windowId}/preview")]
+        public async Task<ActionResult<TicketPreviewResponseDto>> GetNextTicketsPreview(Guid windowId)
+        {
+            try
+            {
+                var preview = await _ticketService.GetNextTicketsPreviewAsync(windowId);
+                return Ok(preview);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpPost("{ticketId}/complete")]
         public async Task<IActionResult> CompleteTicket(Guid ticketId)
         {

@@ -146,6 +146,72 @@ namespace EduQueue.Application.Services
             return MapToDto(nextTicket);
         }
 
+        public async Task<TicketPreviewResponseDto> GetNextTicketsPreviewAsync(Guid windowId)
+        {
+            var tickets = await _ticketRepository.GetByWindowIdAsync(windowId);
+
+            var activeTickets = tickets
+                .Where(t => t.Status == TicketStatus.Queued || t.Status == TicketStatus.Called)
+                .OrderBy(t => t.CreatedAt)
+                .ToList();
+
+            if (!activeTickets.Any())
+            {
+                return new TicketPreviewResponseDto
+                {
+                    CurrentPosition = 0,
+                    TotalQueueLength = 0,
+                    NextTickets = new List<TicketPreviewItemDto>()
+                };
+            }
+
+            // Find currently serving ticket (most recent Called ticket)
+            var currentlyServing = activeTickets
+                .Where(t => t.Status == TicketStatus.Called)
+                .OrderByDescending(t => t.CalledAt)
+                .FirstOrDefault();
+
+            var previewItems = new List<TicketPreviewItemDto>();
+            int currentPosition = 0;
+
+            // Add currently serving as position 0
+            if (currentlyServing != null)
+            {
+                previewItems.Add(new TicketPreviewItemDto
+                {
+                    Position = 0,
+                    TicketNumber = currentlyServing.TicketNumber,
+                    IsPriority = currentlyServing.IsPriority
+                });
+                currentPosition = currentlyServing.QueuePosition;
+            }
+
+            // Get next tickets (up to 10)
+            var queuedTickets = activeTickets
+                .Where(t => t.Status == TicketStatus.Queued)
+                .OrderBy(t => t.CreatedAt)
+                .Take(10)
+                .ToList();
+
+            int position = 1;
+            foreach (var ticket in queuedTickets)
+            {
+                previewItems.Add(new TicketPreviewItemDto
+                {
+                    Position = position++,
+                    TicketNumber = ticket.TicketNumber,
+                    IsPriority = ticket.IsPriority
+                });
+            }
+
+            return new TicketPreviewResponseDto
+            {
+                CurrentPosition = currentPosition,
+                TotalQueueLength = activeTickets.Count,
+                NextTickets = previewItems
+            };
+        }
+
         public async Task CompleteTicketAsync(Guid ticketId)
         {
             var ticket = await _ticketRepository.GetByIdAsync(ticketId);

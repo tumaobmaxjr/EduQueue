@@ -15,7 +15,7 @@ namespace EduQueue.Application.Services
             _windowRepository = windowRepository;
         }
 
-        public async Task<Window> CreateWindowAsync(CreateWindowDto dto)
+        public async Task<WindowDto> CreateWindowAsync(CreateWindowDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Code))
                 throw new ValidationException("Window code is required");
@@ -38,7 +38,9 @@ namespace EduQueue.Application.Services
                 CreatedAt = DateTime.UtcNow
             };
 
-            return await _windowRepository.CreateAsync(window);
+            var createdWindow = await _windowRepository.CreateAsync(window);
+
+            return MapToDto(window);
         }
 
         public async Task<WindowDto?> GetWindowByIdAsync(Guid id)

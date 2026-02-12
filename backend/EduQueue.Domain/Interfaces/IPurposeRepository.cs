@@ -7,7 +7,7 @@ namespace EduQueue.Domain.Interfaces
         Task<Purpose?> GetByIdAsync(Guid id);
         Task<IEnumerable<Purpose>> GetAllAsync();
         Task<IEnumerable<Purpose>> GetActiveAsync();
-        Task<IEnumerable<Purpose>> GetByWindowIdAsync(Guid id);     // Get purposes for specific window
+        Task<IEnumerable<Purpose>> GetByWindowIdAsync(Guid windowId);     // Get purposes for specific window
         Task<Purpose> CreateAsync(Purpose purpose);
         Task UpdateAsync(Purpose purpose);
         Task DeleteAsync(Guid id);

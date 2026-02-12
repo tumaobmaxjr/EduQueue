@@ -7,7 +7,7 @@ namespace EduQueue.Application.Interfaces
         Task<TicketDto> CreateTicketAsync(CreateTicketDto dto);
         Task<TicketDto?> GetTicketByIdAsync(Guid id);
         Task<IEnumerable<TicketDto>> GetAllTicketsAsync();
-        Task<IEnumerable<TicketDto>> GetTicketsbyWindowAsync(Guid windowId);
+        Task<IEnumerable<TicketDto>> GetTicketsByWindowAsync(Guid windowId);
         Task<TicketDto> CallNextTicketAsync(Guid windowId, Guid officerId);
         Task CompleteTicketAsync(Guid ticketId);
         Task MarkNoShowAsync(Guid ticketId);

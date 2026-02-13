@@ -90,7 +90,6 @@ namespace EduQueue.Application.Services
             // Filter to only Queued or NoShow tickets
             var eligibleTickets = tickets
                 .Where(t => t.Status == TicketStatus.Queued || t.Status == TicketStatus.NoShow)
-                .OrderBy(t => t.CreatedAt)
                 .ToList();
 
             if (!eligibleTickets.Any())
@@ -98,44 +97,24 @@ namespace EduQueue.Application.Services
                 throw new InvalidOperationException("No tickets in queue");
             }
 
-            // Check what was served last
-            bool lastWasPriority = WindowQueueState.WasLastPriority(windowId);
+            // Priority always cuts the lane - serve priority first
+            var nextTicket = eligibleTickets
+                .Where(t => t.IsPriority)
+                .OrderBy(t => t.CreatedAt)
+                .FirstOrDefault();
 
-            Ticket? nextTicket = null;
-
-            if (!lastWasPriority)
-            {
-                // Last was Regular (or first call), so serve Priority if available
-                nextTicket = eligibleTickets
-                    .Where(t => t.IsPriority)
-                    .OrderBy(t => t.CreatedAt)
-                    .FirstOrDefault();
-
-                if (nextTicket != null)
-                {
-                    WindowQueueState.SetLastPriority(windowId, true); // Mark as priority served
-                }
-            }
-
-            // If no priority ticket found or last was priority, serve Regular
+            // If no priority ticket, serve regular
             if (nextTicket == null)
             {
                 nextTicket = eligibleTickets
                     .Where(t => !t.IsPriority)
                     .OrderBy(t => t.CreatedAt)
                     .FirstOrDefault();
-
-                if (nextTicket != null)
-                {
-                    WindowQueueState.SetLastPriority(windowId, false); // Mark as priority served
-                }
             }
 
-            // If still no ticket (shouldn't happen), take any available
             if (nextTicket == null)
             {
-                nextTicket = eligibleTickets.First();
-                WindowQueueState.SetLastPriority(windowId, nextTicket.IsPriority);
+                throw new InvalidOperationException("No eligible ticket found");
             }
 
             nextTicket.Status = TicketStatus.Called;

@@ -133,8 +133,9 @@ export function TicketSuccessView({ ticket, onGetAnother }: TicketSuccessViewPro
                 <Chip
                   icon={<PriorityHighIcon />}
                   label="Priority"
-                  color="warning"
+                  color="error"
                   size="small"
+                  sx={{ fontWeight: 600 }}
                 />
               )}
             </Stack>

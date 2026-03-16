@@ -71,9 +71,11 @@ export interface Ticket {
 }
 
 export interface TicketPreviewItem {
+  id: string
   position: number
   ticketNumber: string
   isPriority: boolean
+  isNoShow: boolean
 }
 
 export interface TicketPreviewResponse {

@@ -142,6 +142,16 @@ export async function markNoShow(ticketId: string): Promise<void> {
   await request<void>(`/api/Tickets/${ticketId}/noshow`, { method: 'POST' })
 }
 
+export async function recallTicket(
+  ticketId: string,
+  officerId: string
+): Promise<Ticket> {
+  return request<Ticket>(
+    `/api/Tickets/${ticketId}/recall?officerId=${officerId}`,
+    { method: 'POST' }
+  )
+}
+
 export async function transferTicket(
   ticketId: string,
   targetWindowId: string

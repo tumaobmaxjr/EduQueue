@@ -460,17 +460,24 @@ export function AdminPage() {
                   placeholder="Search windows or purposes..."
                   value={configSearchText}
                   onChange={(e) => setConfigSearchText(e.target.value)}
+                  fullWidth
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <SearchIcon />
+                        <SearchIcon fontSize="small" />
                       </InputAdornment>
                     ),
+                    endAdornment: configSearchText ? (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={() => setConfigSearchText('')}>
+                          <ClearIcon fontSize="small" />
+                        </IconButton>
+                      </InputAdornment>
+                    ) : null,
                   }}
                   sx={{
-                    maxWidth: 400,
                     bgcolor: 'background.paper',
-                    '& .MuiOutlinedInput-root': { '& fieldset': { border: 'none' } },
+                    '& .MuiOutlinedInput-root': { borderRadius: 2 },
                   }}
                 />
               </Box>

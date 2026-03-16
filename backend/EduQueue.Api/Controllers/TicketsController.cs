@@ -67,6 +67,20 @@ namespace EduQueue.Api.Controllers
             }
         }
 
+        [HttpPost("{ticketId}/recall")]
+        public async Task<ActionResult<TicketDto>> RecallTicket(Guid ticketId, [FromQuery] Guid officerId)
+        {
+            try
+            {
+                var ticket = await _ticketService.RecallTicketAsync(ticketId, officerId);
+                return Ok(ticket);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
         [HttpGet("window/{windowId}/preview")]
         public async Task<ActionResult<TicketPreviewResponseDto>> GetNextTicketsPreview(Guid windowId)
         {

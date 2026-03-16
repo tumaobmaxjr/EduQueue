@@ -87,9 +87,25 @@ namespace EduQueue.Application.Services
         {
             var tickets = await _ticketRepository.GetByWindowIdAsync(windowId);
 
-            // Filter to only Queued or NoShow tickets
+            // Auto-mark any currently Called tickets as NoShow before calling next
+            // This prevents multiple tickets having Called status simultaneously
+            var currentlyCalledTickets = tickets
+                .Where(t => t.Status == TicketStatus.Called)
+                .ToList();
+
+            foreach (var calledTicket in currentlyCalledTickets)
+            {
+                calledTicket.Status = TicketStatus.NoShow;
+                calledTicket.SkipCount++;
+                await _ticketRepository.UpdateAsync(calledTicket);
+            }
+
+            // Re-fetch tickets after updating
+            tickets = await _ticketRepository.GetByWindowIdAsync(windowId);
+
+            // Filter to only Queued tickets (No-Show tickets require manual re-call by officer)
             var eligibleTickets = tickets
-                .Where(t => t.Status == TicketStatus.Queued || t.Status == TicketStatus.NoShow)
+                .Where(t => t.Status == TicketStatus.Queued)
                 .ToList();
 
             if (!eligibleTickets.Any())
@@ -97,20 +113,11 @@ namespace EduQueue.Application.Services
                 throw new InvalidOperationException("No tickets in queue");
             }
 
-            // Priority always cuts the lane - serve priority first
+            // Priority order: Priority first, then Regular (oldest first within each group)
             var nextTicket = eligibleTickets
-                .Where(t => t.IsPriority)
-                .OrderBy(t => t.CreatedAt)
+                .OrderBy(t => t.IsPriority ? 0 : 1)
+                .ThenBy(t => t.CreatedAt)
                 .FirstOrDefault();
-
-            // If no priority ticket, serve regular
-            if (nextTicket == null)
-            {
-                nextTicket = eligibleTickets
-                    .Where(t => !t.IsPriority)
-                    .OrderBy(t => t.CreatedAt)
-                    .FirstOrDefault();
-            }
 
             if (nextTicket == null)
             {
@@ -123,6 +130,38 @@ namespace EduQueue.Application.Services
 
             await _ticketRepository.UpdateAsync(nextTicket);
             return MapToDto(nextTicket);
+        }
+
+        public async Task<TicketDto> RecallTicketAsync(Guid ticketId, Guid officerId)
+        {
+            var ticket = await _ticketRepository.GetByIdAsync(ticketId);
+            if (ticket == null) throw new InvalidOperationException("Ticket not found");
+
+            if (ticket.Status != TicketStatus.NoShow)
+            {
+                throw new InvalidOperationException($"Cannot recall ticket with status '{ticket.Status}'. Only No-Show tickets can be recalled.");
+            }
+
+            // Auto-mark any currently Called tickets for this window as NoShow
+            var windowTickets = await _ticketRepository.GetByWindowIdAsync(ticket.WindowId);
+            var currentlyCalledTickets = windowTickets
+                .Where(t => t.Status == TicketStatus.Called)
+                .ToList();
+
+            foreach (var calledTicket in currentlyCalledTickets)
+            {
+                calledTicket.Status = TicketStatus.NoShow;
+                calledTicket.SkipCount++;
+                await _ticketRepository.UpdateAsync(calledTicket);
+            }
+
+            // Re-call the No-Show ticket
+            ticket.Status = TicketStatus.Called;
+            ticket.CalledAt = DateTime.UtcNow;
+            ticket.ServedByOfficerId = officerId;
+
+            await _ticketRepository.UpdateAsync(ticket);
+            return MapToDto(ticket);
         }
 
         public async Task<TicketPreviewResponseDto> GetNextTicketsPreviewAsync(Guid windowId)
@@ -154,23 +193,21 @@ namespace EduQueue.Application.Services
             var previewItems = new List<TicketPreviewItemDto>();
             int currentPosition = 0;
 
-            // Add currently serving as position 0
+            // Track currently serving ticket but DON'T add to preview list
+            // (it's shown separately in CurrentTicketCard on frontend)
             if (currentlyServing != null)
             {
-                previewItems.Add(new TicketPreviewItemDto
-                {
-                    Position = 0,
-                    TicketNumber = currentlyServing.TicketNumber,
-                    IsPriority = currentlyServing.IsPriority,
-                    IsNoShow = false
-                });
                 currentPosition = currentlyServing.QueuePosition;
             }
 
-            // Get next tickets (up to 10) - include both Queued and NoShow tickets
+            // Get next tickets (up to 10) - NoShow tickets appear after all Queued tickets
+            // NoShow tickets are ordered by SkipCount so they rotate fairly
             var queuedTickets = activeTickets
                 .Where(t => t.Status == TicketStatus.Queued || t.Status == TicketStatus.NoShow)
-                .OrderBy(t => t.CreatedAt)
+                .OrderBy(t => t.Status == TicketStatus.NoShow ? 1 : 0)
+                .ThenBy(t => t.IsPriority ? 0 : 1)
+                .ThenBy(t => t.SkipCount)
+                .ThenBy(t => t.CreatedAt)
                 .Take(10)
                 .ToList();
 
@@ -179,6 +216,7 @@ namespace EduQueue.Application.Services
             {
                 previewItems.Add(new TicketPreviewItemDto
                 {
+                    Id = ticket.Id,
                     Position = position++,
                     TicketNumber = ticket.TicketNumber,
                     IsPriority = ticket.IsPriority,

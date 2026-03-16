@@ -193,12 +193,13 @@ export function MainLayout() {
     )
 
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', bgcolor: 'background.default' }}>
         <Box
           component="main"
           sx={{
             flex: 1,
             minWidth: 0,
+            overflowY: 'auto',
             pb: 7,
           }}
         >
@@ -240,7 +241,7 @@ export function MainLayout() {
 
   // Desktop sidebar
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+    <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden', bgcolor: 'background.default' }}>
       <Drawer
         variant="permanent"
         sx={{
@@ -267,7 +268,10 @@ export function MainLayout() {
         sx={{
           flexGrow: 1,
           minWidth: 0,
-          minHeight: '100vh',
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         <Outlet />

@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
 import { Container, Paper, Box, Typography, Stack, Chip, Button, alpha, LinearProgress } from '@mui/material'
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import HomeIcon from '@mui/icons-material/Home'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh'
 import DownloadIcon from '@mui/icons-material/Download'
+import VisibilityIcon from '@mui/icons-material/Visibility'
 import html2canvas from 'html2canvas'
+import { useNavigate } from 'react-router-dom'
 import type { Ticket } from '../../api/types'
 
 interface TicketSuccessViewProps {
@@ -18,6 +20,7 @@ export function TicketSuccessView({ ticket, onGetAnother }: TicketSuccessViewPro
   const [countdown, setCountdown] = useState(AUTO_RESET_SECONDS)
   const ticketContentRef = useRef<HTMLDivElement>(null)
   const [isDownloading, setIsDownloading] = useState(false)
+  const navigate = useNavigate()
 
   const handleDownload = async () => {
     if (!ticketContentRef.current) return
@@ -38,6 +41,10 @@ export function TicketSuccessView({ ticket, onGetAnother }: TicketSuccessViewPro
     } finally {
       setIsDownloading(false)
     }
+  }
+
+  const handleViewQueueStatus = () => {
+    navigate(`/display?window=${ticket.windowId}`)
   }
 
   useEffect(() => {
@@ -166,12 +173,12 @@ export function TicketSuccessView({ ticket, onGetAnother }: TicketSuccessViewPro
           <Button
             variant="contained"
             size="large"
-            onClick={onGetAnother}
-            startIcon={<AddCircleOutlineIcon />}
+            onClick={handleViewQueueStatus}
+            startIcon={<VisibilityIcon />}
             fullWidth
             sx={{ py: 1.5 }}
           >
-            Get Another Ticket
+            View Queue Status
           </Button>
           <Button
             variant="outlined"
@@ -183,6 +190,16 @@ export function TicketSuccessView({ ticket, onGetAnother }: TicketSuccessViewPro
             sx={{ py: 1.5 }}
           >
             {isDownloading ? 'Downloading...' : 'Download Ticket'}
+          </Button>
+          <Button
+            variant="text"
+            size="large"
+            onClick={onGetAnother}
+            startIcon={<HomeIcon />}
+            fullWidth
+            sx={{ py: 1.5, color: 'text.secondary' }}
+          >
+            Back to Main Page
           </Button>
         </Stack>
 

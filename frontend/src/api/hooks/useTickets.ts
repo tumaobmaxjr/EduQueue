@@ -15,7 +15,7 @@ export function useTickets() {
   return useQuery({
     queryKey: ['tickets'],
     queryFn: getAllTickets,
-    refetchInterval: 5000,
+    refetchInterval: 3000,
   })
 }
 
@@ -53,6 +53,7 @@ export function useCallNextTicket() {
     mutationFn: ({ windowId, officerId }: { windowId: string; officerId: string }) =>
       callNextTicket(windowId, officerId),
     onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['tickets'] })
       queryClient.invalidateQueries({ queryKey: ['tickets', 'window', variables.windowId] })
       queryClient.invalidateQueries({ queryKey: ['tickets', 'preview', variables.windowId] })
     },
@@ -74,6 +75,7 @@ export function useNoShowTicket() {
   return useMutation({
     mutationFn: (ticketId: string) => markNoShow(ticketId),
     onSuccess: () => {
+      // Invalidate all ticket-related queries so both DisplayPage and OfficerPage update
       queryClient.invalidateQueries({ queryKey: ['tickets'] })
     },
   })

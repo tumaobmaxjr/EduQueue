@@ -1,11 +1,13 @@
 import { Box, Typography, Stack, Paper, Chip, alpha } from '@mui/material'
 import QueueIcon from '@mui/icons-material/Queue'
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh'
+import PersonOffIcon from '@mui/icons-material/PersonOff'
 
 interface NextTicket {
   ticketNumber: string
   isPriority: boolean
   position: number
+  isNoShow?: boolean
 }
 
 interface QueuePreviewListProps {
@@ -60,7 +62,8 @@ export function QueuePreviewList({ nextTickets }: QueuePreviewListProps) {
                 borderBottom: index < nextTickets.length - 1 ? '1px solid' : 'none',
                 borderColor: 'divider',
                 transition: 'background 0.15s',
-                '&:hover': { bgcolor: 'action.hover' },
+                bgcolor: t.isNoShow ? (theme) => alpha(theme.palette.warning.main, 0.1) : 'transparent',
+                '&:hover': { bgcolor: t.isNoShow ? (theme) => alpha(theme.palette.warning.main, 0.15) : 'action.hover' },
               }}
             >
               <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -69,8 +72,8 @@ export function QueuePreviewList({ nextTickets }: QueuePreviewListProps) {
                     width: 28,
                     height: 28,
                     borderRadius: 1,
-                    bgcolor: index === 0 ? 'primary.main' : 'grey.100',
-                    color: index === 0 ? 'white' : 'text.secondary',
+                    bgcolor: t.isNoShow ? 'warning.main' : index === 0 ? 'primary.main' : 'grey.100',
+                    color: t.isNoShow ? 'warning.contrastText' : index === 0 ? 'white' : 'text.secondary',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -89,16 +92,28 @@ export function QueuePreviewList({ nextTickets }: QueuePreviewListProps) {
                   {t.ticketNumber}
                 </Typography>
               </Stack>
-              {t.isPriority && (
-                <Chip
-                  icon={<PriorityHighIcon sx={{ fontSize: 14 }} />}
-                  label="Priority"
-                  size="small"
-                  color="error"
-                  variant="outlined"
-                  sx={{ height: 24 }}
-                />
-              )}
+              <Stack direction="row" spacing={0.5}>
+                {t.isNoShow && (
+                  <Chip
+                    icon={<PersonOffIcon sx={{ fontSize: 14 }} />}
+                    label="No-Show"
+                    size="small"
+                    color="warning"
+                    variant="filled"
+                    sx={{ height: 24 }}
+                  />
+                )}
+                {t.isPriority && (
+                  <Chip
+                    icon={<PriorityHighIcon sx={{ fontSize: 14 }} />}
+                    label="Priority"
+                    size="small"
+                    color="error"
+                    variant="outlined"
+                    sx={{ height: 24 }}
+                  />
+                )}
+              </Stack>
             </Box>
           ))}
         </Stack>

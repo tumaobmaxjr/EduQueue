@@ -9,12 +9,6 @@ import {
   useTheme,
   Container,
   Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
 } from "@mui/material";
 import type { Theme } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -89,11 +83,20 @@ export function DisplayPage() {
   }, [windows, tickets]);
 
   // Next up tickets across all windows (queued + no-show for re-calling)
+  // Order: Queued first, then No-Show; within each group: priority first, then oldest
   const nextUp = useMemo(() => {
     return tickets
       .filter((t) => t.status === 0 || t.status === 4)
       .sort((a, b) => {
+        // No-Show (status 4) goes to bottom
+        const statusOrderA = a.status === 4 ? 1 : 0;
+        const statusOrderB = b.status === 4 ? 1 : 0;
+        if (statusOrderA !== statusOrderB) return statusOrderA - statusOrderB;
+
+        // Priority first within same status group
         if (a.isPriority !== b.isPriority) return a.isPriority ? -1 : 1;
+
+        // Oldest first
         return (
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
@@ -107,7 +110,8 @@ export function DisplayPage() {
     ? windows.find((w) => w.id === selectedWindowId)
     : null;
 
-  // Queue for selected window: all queued + no-show tickets sorted by priority then time
+  // Queue for selected window: all queued + no-show tickets
+  // Order: Queued first, then No-Show; within each group: priority first, then oldest
   const selectedWindowQueue = useMemo(() => {
     if (!selectedWindowId) return [];
     return tickets
@@ -116,7 +120,15 @@ export function DisplayPage() {
           t.windowId === selectedWindowId && (t.status === 0 || t.status === 4),
       )
       .sort((a, b) => {
+        // No-Show (status 4) goes to bottom
+        const statusOrderA = a.status === 4 ? 1 : 0;
+        const statusOrderB = b.status === 4 ? 1 : 0;
+        if (statusOrderA !== statusOrderB) return statusOrderA - statusOrderB;
+
+        // Priority first within same status group
         if (a.isPriority !== b.isPriority) return a.isPriority ? -1 : 1;
+
+        // Oldest first
         return (
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
@@ -523,10 +535,31 @@ function NowServingCard({
 }
 
 /* ─────────────────────────────────────────────────────────
-   Queue List Component
+   Queue List Component - Two Column Layout (Priority | Regular)
    ───────────────────────────────────────────────────────── */
 
 function QueueList({ queue, theme }: { queue: Ticket[]; theme: Theme }) {
+  // Separate into Priority and Regular (including their No-Shows)
+  // Priority Lane: Priority Queued + Priority No-Show
+  // Regular Lane: Regular Queued + Regular No-Show
+  const priorityQueue = queue
+    .filter((t) => t.isPriority && (t.status === 0 || t.status === 4))
+    .sort((a, b) => {
+      // Queued first, then No-Show
+      if (a.status !== b.status) return a.status === 0 ? -1 : 1;
+      // Then by creation time
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
+
+  const regularQueue = queue
+    .filter((t) => !t.isPriority && (t.status === 0 || t.status === 4))
+    .sort((a, b) => {
+      // Queued first, then No-Show
+      if (a.status !== b.status) return a.status === 0 ? -1 : 1;
+      // Then by creation time
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
+
   return (
     <Box
       sx={{
@@ -541,163 +574,187 @@ function QueueList({ queue, theme }: { queue: Ticket[]; theme: Theme }) {
         variant="h5"
         fontWeight={700}
         color="text.primary"
-        sx={{ flexShrink: 0 }}
+        sx={{ flexShrink: 0, mb: 2 }}
       >
-        Queue
-      </Typography>
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        sx={{ mb: 2, flexShrink: 0 }}
-      >
-        {queue.length > 0
-          ? `${queue.length} ticket${queue.length !== 1 ? "s" : ""} total`
-          : "No tickets in queue"}
+        Waiting Queue
       </Typography>
 
+      <Grid container spacing={2} sx={{ flex: 1, overflow: "hidden", minHeight: 0 }}>
+        {/* Priority Queue Column */}
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+          <QueueColumn
+            title="Priority Lane"
+            subtitle="PWD, Senior Citizens, Pregnant"
+            queue={priorityQueue}
+            theme={theme}
+            isPriority={true}
+          />
+        </Grid>
+
+        {/* Regular Queue Column */}
+        <Grid size={{ xs: 12, md: 6 }} sx={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+          <QueueColumn
+            title="Regular Lane"
+            subtitle="General queue"
+            queue={regularQueue}
+            theme={theme}
+            isPriority={false}
+          />
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────
+   Queue Column Component - Compact view (# and Ticket only)
+   ───────────────────────────────────────────────────────── */
+
+function QueueColumn({
+  title,
+  subtitle,
+  queue,
+  theme,
+  isPriority,
+}: {
+  title: string;
+  subtitle: string;
+  queue: Ticket[];
+  theme: Theme;
+  isPriority: boolean;
+}) {
+  const accentColor = isPriority ? theme.palette.error.main : theme.palette.primary.main;
+  const queuedCount = queue.filter((t) => t.status === 0).length;
+  const noShowCount = queue.filter((t) => t.status === 4).length;
+
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+      {/* Column Header */}
+      <Paper
+        variant="outlined"
+        sx={{
+          px: 2,
+          py: 1.5,
+          mb: 1,
+          bgcolor: alpha(accentColor, 0.08),
+          borderColor: alpha(accentColor, 0.3),
+          flexShrink: 0,
+        }}
+      >
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Box>
+            <Typography variant="h6" fontWeight={700} color={accentColor}>
+              {title}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {subtitle}
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={0.5}>
+            <Chip
+              label={`${queuedCount} waiting`}
+              size="small"
+              sx={{
+                bgcolor: accentColor,
+                color: "white",
+                fontWeight: 600,
+              }}
+            />
+            {noShowCount > 0 && (
+              <Chip
+                label={`${noShowCount} no-show`}
+                size="small"
+                color="warning"
+                sx={{ fontWeight: 600 }}
+              />
+            )}
+          </Stack>
+        </Stack>
+      </Paper>
+
+      {/* Queue List - Compact */}
       {queue.length > 0 ? (
-        <TableContainer
-          component={Paper}
+        <Paper
           variant="outlined"
           sx={{ flex: 1, overflow: "auto" }}
         >
-          <Table stickyHeader>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  sx={{ fontWeight: 700, bgcolor: "background.paper" }}
-                >
-                  #
-                </TableCell>
-                <TableCell
-                  sx={{ fontWeight: 700, bgcolor: "background.paper" }}
-                >
-                  Ticket
-                </TableCell>
-                <TableCell
-                  sx={{ fontWeight: 700, bgcolor: "background.paper" }}
-                >
-                  Name
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: 700,
-                    display: { xs: "none", sm: "table-cell" },
-                    bgcolor: "background.paper",
-                  }}
-                >
-                  Purpose
-                </TableCell>
-                <TableCell
-                  sx={{ fontWeight: 700, bgcolor: "background.paper" }}
-                >
-                  Priority
-                </TableCell>
-                <TableCell
-                  sx={{
-                    fontWeight: 700,
-                    display: { xs: "none", md: "table-cell" },
-                    bgcolor: "background.paper",
-                  }}
-                >
-                  Joined
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {queue.map((t, index) => (
-                <TableRow
-                  key={t.id}
-                  sx={{
-                    bgcolor:
-                      t.status === 4
-                        ? alpha(theme.palette.warning.main, 0.08)
-                        : t.isPriority
-                          ? alpha(theme.palette.error.main, 0.04)
-                          : "transparent",
-                    "&:last-child td": { borderBottom: 0 },
-                  }}
-                >
-                  <TableCell>
-                    <Typography
-                      variant="body2"
-                      fontWeight={600}
-                      color="text.secondary"
-                    >
-                      {index + 1}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography
-                      variant="body1"
-                      fontWeight={700}
-                      fontFamily="monospace"
-                      color={t.isPriority ? "error.main" : "primary.main"}
-                    >
-                      {t.ticketNumber}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Typography variant="body2">
-                      {maskClientName(t.clientName)}
-                    </Typography>
-                  </TableCell>
-                  <TableCell sx={{ display: { xs: "none", sm: "table-cell" } }}>
-                    <Typography variant="body2" color="text.secondary">
-                      {t.purposeName}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>
-                    <Stack
-                      direction="row"
-                      spacing={0.5}
-                      flexWrap="wrap"
-                      useFlexGap
-                    >
-                      {t.isPriority && (
-                        <Chip
-                          label="Priority"
-                          color="error"
-                          size="small"
-                          sx={{ fontWeight: 600, fontSize: "0.7rem" }}
-                        />
-                      )}
-                      {t.status === 4 && (
-                        <Chip
-                          label="No-Show"
-                          color="warning"
-                          size="small"
-                          sx={{ fontWeight: 600, fontSize: "0.7rem" }}
-                        />
-                      )}
-                      {!t.isPriority && t.status !== 4 && (
-                        <Typography variant="body2" color="text.disabled">
-                          Regular
-                        </Typography>
-                      )}
-                    </Stack>
-                  </TableCell>
-                  <TableCell sx={{ display: { xs: "none", md: "table-cell" } }}>
-                    <Typography variant="caption" color="text.secondary">
-                      {new Date(t.createdAt).toLocaleTimeString()}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+          <Stack>
+            {queue.map((t, index) => (
+              <Box
+                key={t.id}
+                sx={{
+                  px: 2,
+                  py: 1.5,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  borderBottom: index < queue.length - 1 ? "1px solid" : "none",
+                  borderColor: "divider",
+                  bgcolor: t.status === 4
+                    ? alpha(theme.palette.warning.main, 0.08)
+                    : index === 0
+                      ? alpha(accentColor, 0.06)
+                      : "transparent",
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={2}>
+                  {/* Position number */}
+                  <Box
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 1,
+                      bgcolor: t.status === 4
+                        ? "warning.main"
+                        : index === 0
+                          ? accentColor
+                          : "grey.200",
+                      color: t.status === 4 || index === 0 ? "white" : "text.secondary",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 700,
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    {index + 1}
+                  </Box>
+                  {/* Ticket number */}
+                  <Typography
+                    variant="h6"
+                    fontWeight={700}
+                    fontFamily="monospace"
+                    color={t.status === 4 ? "warning.dark" : accentColor}
+                  >
+                    {t.ticketNumber}
+                  </Typography>
+                </Stack>
+                {/* No-Show badge */}
+                {t.status === 4 && (
+                  <Chip
+                    label="No-Show"
+                    size="small"
+                    color="warning"
+                    sx={{ fontWeight: 600 }}
+                  />
+                )}
+              </Box>
+            ))}
+          </Stack>
+        </Paper>
       ) : (
         <Paper
           variant="outlined"
           sx={{
-            p: 4,
-            textAlign: "center",
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             bgcolor: alpha(theme.palette.grey[500], 0.02),
           }}
         >
-          <Typography variant="body1" color="text.secondary">
-            The queue is empty. New tickets will appear here.
+          <Typography variant="body2" color="text.secondary">
+            No {isPriority ? "priority" : "regular"} tickets waiting
           </Typography>
         </Paper>
       )}

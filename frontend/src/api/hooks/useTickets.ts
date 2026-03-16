@@ -7,6 +7,7 @@ import {
   callNextTicket,
   completeTicket,
   markNoShow,
+  recallTicket,
   transferTicket,
 } from '../client'
 import type { CreateTicketRequest } from '../types'
@@ -76,6 +77,17 @@ export function useNoShowTicket() {
     mutationFn: (ticketId: string) => markNoShow(ticketId),
     onSuccess: () => {
       // Invalidate all ticket-related queries so both DisplayPage and OfficerPage update
+      queryClient.invalidateQueries({ queryKey: ['tickets'] })
+    },
+  })
+}
+
+export function useRecallTicket() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ ticketId, officerId }: { ticketId: string; officerId: string }) =>
+      recallTicket(ticketId, officerId),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tickets'] })
     },
   })

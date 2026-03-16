@@ -52,6 +52,7 @@ import {
   useCallNextTicket,
   useCompleteTicket,
   useNoShowTicket,
+  useRecallTicket,
   useTransferTicket,
 } from '../api/hooks'
 import { PageHeader, StatCard, StatusChip, EmptyState } from '../components/shared'
@@ -84,6 +85,7 @@ export function OfficerPage() {
   const callNextMutation = useCallNextTicket()
   const completeMutation = useCompleteTicket()
   const noShowMutation = useNoShowTicket()
+  const recallMutation = useRecallTicket()
   const transferMutation = useTransferTicket()
 
   const [currentTicket, setCurrentTicket] = useState<Ticket | null>(null)
@@ -211,6 +213,17 @@ export function OfficerPage() {
       setCurrentTicket(null)
     } catch (e) {
       showNotification(e instanceof Error ? e.message : 'Failed to mark no-show', 'error')
+    }
+  }
+
+  const handleRecall = async (ticketId: string) => {
+    const officerId = crypto.randomUUID?.() ?? '00000000-0000-0000-0000-000000000000'
+    try {
+      const ticket = await recallMutation.mutateAsync({ ticketId, officerId })
+      setCurrentTicket(ticket)
+      showNotification(`Recalled ${ticket.ticketNumber}`, 'success')
+    } catch (e) {
+      showNotification(e instanceof Error ? e.message : 'Failed to recall ticket', 'error')
     }
   }
 
@@ -345,7 +358,13 @@ export function OfficerPage() {
                 {/* Right: Queue Preview */}
                 <Grid size={{ xs: 12, md: 5 }} sx={{ display: 'flex', flexDirection: 'column' }}>
                   <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    {preview && <QueuePreviewList nextTickets={preview.nextTickets} />}
+                    {preview && (
+                      <QueuePreviewList
+                        nextTickets={preview.nextTickets}
+                        onRecall={handleRecall}
+                        recallPending={recallMutation.isPending}
+                      />
+                    )}
                   </Box>
                 </Grid>
               </Grid>

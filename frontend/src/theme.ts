@@ -239,7 +239,7 @@ export const tokens = {
       1: alpha('#FB8C00', 0.1),   // Called — orange
       2: alpha('#1B5E20', 0.1),   // Serving — green
       3: alpha('#4CAF50', 0.1),   // Completed — success
-      4: alpha('#E53935', 0.1),   // No-show — red
+      4: alpha('#FB8C00', 0.1),   // No-show — warning orange (for visibility)
       5: alpha('#9E9E9E', 0.1),   // Transferred — grey
     } as Record<number, string>,
     labels: {
@@ -255,7 +255,7 @@ export const tokens = {
       1: 'warning',
       2: 'primary',
       3: 'success',
-      4: 'error',
+      4: 'warning',   // Changed from 'error' to 'warning' for consistency
       5: 'default',
     } as Record<number, 'default' | 'primary' | 'secondary' | 'success' | 'error' | 'warning' | 'info'>,
   },

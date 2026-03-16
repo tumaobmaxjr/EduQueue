@@ -1,4 +1,4 @@
-﻿using EduQueue.Domain.Entities;
+using EduQueue.Domain.Entities;
 using EduQueue.Domain.Interfaces;
 using EduQueue.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +18,7 @@ namespace EduQueue.Infrastructure.Repositories
         {
             return await _context.Tickets
                 .Include(t => t.Window)
+                .Include(t => t.Purpose)
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 
@@ -25,6 +26,7 @@ namespace EduQueue.Infrastructure.Repositories
         {
             return await _context.Tickets
                 .Include(t => t.Window)
+                .Include(t => t.Purpose)
                 .ToListAsync();
         }
 
@@ -32,6 +34,7 @@ namespace EduQueue.Infrastructure.Repositories
         {
             return await _context.Tickets
                 .Include(t => t.Window)
+                .Include(t => t.Purpose)
                 .Where(t => t.WindowId == windowId)
                 .ToListAsync();
         }
@@ -69,8 +72,7 @@ namespace EduQueue.Infrastructure.Repositories
         public async Task<int> GetCountByWindowAndDateAsync(Guid windowId, DateTime date)
         {
             return await _context.Tickets
-                .CountAsync(t => t.WindowId == windowId &&
-                    t.CreatedAt.Date == date.Date);
+                .CountAsync(t => t.WindowId == windowId && t.CreatedAt.Date == date.Date);
         }
     }
 }

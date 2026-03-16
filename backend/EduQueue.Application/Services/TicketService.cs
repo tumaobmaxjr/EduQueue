@@ -129,8 +129,9 @@ namespace EduQueue.Application.Services
         {
             var tickets = await _ticketRepository.GetByWindowIdAsync(windowId);
 
+            // Include Queued, Called, and NoShow tickets (NoShow can be re-called)
             var activeTickets = tickets
-                .Where(t => t.Status == TicketStatus.Queued || t.Status == TicketStatus.Called)
+                .Where(t => t.Status == TicketStatus.Queued || t.Status == TicketStatus.Called || t.Status == TicketStatus.NoShow)
                 .OrderBy(t => t.CreatedAt)
                 .ToList();
 
@@ -160,14 +161,15 @@ namespace EduQueue.Application.Services
                 {
                     Position = 0,
                     TicketNumber = currentlyServing.TicketNumber,
-                    IsPriority = currentlyServing.IsPriority
+                    IsPriority = currentlyServing.IsPriority,
+                    IsNoShow = false
                 });
                 currentPosition = currentlyServing.QueuePosition;
             }
 
-            // Get next tickets (up to 10)
+            // Get next tickets (up to 10) - include both Queued and NoShow tickets
             var queuedTickets = activeTickets
-                .Where(t => t.Status == TicketStatus.Queued)
+                .Where(t => t.Status == TicketStatus.Queued || t.Status == TicketStatus.NoShow)
                 .OrderBy(t => t.CreatedAt)
                 .Take(10)
                 .ToList();
@@ -179,7 +181,8 @@ namespace EduQueue.Application.Services
                 {
                     Position = position++,
                     TicketNumber = ticket.TicketNumber,
-                    IsPriority = ticket.IsPriority
+                    IsPriority = ticket.IsPriority,
+                    IsNoShow = ticket.Status == TicketStatus.NoShow
                 });
             }
 

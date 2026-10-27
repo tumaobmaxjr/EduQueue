@@ -2,7 +2,6 @@ import { Box, Typography, Stack, Paper, Chip, alpha, Button, CircularProgress, G
 import QueueIcon from '@mui/icons-material/Queue'
 import PriorityHighIcon from '@mui/icons-material/PriorityHigh'
 import PersonOffIcon from '@mui/icons-material/PersonOff'
-import RefreshIcon from '@mui/icons-material/Refresh'
 import type { TicketPreviewItem } from '../../api/types'
 
 interface QueuePreviewListProps {
